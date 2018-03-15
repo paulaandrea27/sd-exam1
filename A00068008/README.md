@@ -159,7 +159,7 @@ Iniciar el servicio:
 
 3. Cookbooks necesarios para realizar la instalación de los servicios solicitados
 
-![Estructura](/cookbook_tree.png)
+![Estructura](https://github.com/paulaandrea27/sd-exam1/blob/master/A00068008/cookbook_tree.png)
 
 
    Los cookbooks que se han creado son uno para el balanceador, haproxy, y otro para los servidores web, httpd. Cada uno tiene recetas de configuración e instalación, que automatizan los comandos presentados en el paso 1, donde el archivo default hace referencia a los archivos de instalación y configuración respectivamente. Por otra parte, cuenta con unos templates, que son archivos que adoptarán los servidores y que pueden contener variables que se pasan por medio de un json en el Vagrantfile. Estos templates son referenciados a la carpeta en la que se ubicarán y otras características, así como las variables, en el archivo de configuración de la receta.
