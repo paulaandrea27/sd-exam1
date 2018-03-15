@@ -29,7 +29,7 @@ Se realiza	el	aprovisionamiento	de	un	ambiente	compuesto	por	tres máquinas	por 
 Por último, se prueba	el	funcionamiento	del balanceador	mostrando visualmente cuál servidor web (su nombre y dirección IP) atiende la	petición.
 
 
-![DiagramaUML](sd-exam1/A00068008/diagramaUML.png)
+![DiagramaUML](https://github.com/paulaandrea27/sd-exam1/blob/master/A00068008/diagramaUML.png)
 
 
 ### Actividades
@@ -52,19 +52,19 @@ Configurarlo, editando el archivo haproxy.cfg:
 	#---------------------------------------------------------------------
 	# round robin balancing between the various backends
 	#---------------------------------------------------------------------
-		 backend nodes
-		   balance     roundrobin
-		   server app1 192.168.34.12:80 check
-		   server app2 192.168.34.13:80 check`
+	backend nodes
+	    balance     roundrobin
+	    server app1 192.168.34.12:80 check
+	    server app2 192.168.34.13:80 check`
 	   
 	  
 Configurar los logs en el archivo rsyslog:
         
 	
 	sudo vi /etc/sysconfig/rsyslog
-      
+	
 	SYSLOGD_OPTIONS="-r"
-        local2.*                       /var/log/haproxy.log
+	local2.*                       /var/log/haproxy.log
 
 
 Reiniciar el servicio: 
