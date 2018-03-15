@@ -29,10 +29,7 @@ Se realiza	el	aprovisionamiento	de	un	ambiente	compuesto	por	tres máquinas	por 
 Por último, se prueba	el	funcionamiento	del balanceador	mostrando visualmente cuál servidor web (su nombre y dirección IP) atiende la	petición.
 
 
-![Diagrama UML de la implementación(https://github.com/paulaandrea27/sdexam1/blob/master/A00068008/Diagrama%20Parcial%201%20Distribuidos.png)
-
-
-![DiagramaUML](sd-exam1/A00068008/Diagrama Parcial 1 Distribuidos.png)
+![DiagramaUML](sd-exam1/A00068008/diagramaUML.png)
 
 
 ### Actividades
@@ -44,38 +41,36 @@ Por último, se prueba	el	funcionamiento	del balanceador	mostrando visualmente c
 Instalar el haproxy: 
 
 
-`sudo yum install haproxy`
+	sudo yum install haproxy
 
 
 Configurarlo, editando el archivo haproxy.cfg: 
 
 
-`sudo vi /etc/haproxy/haproxy.cfg`
+	sudo vi /etc/haproxy/haproxy.cfg
 
-
-`#---------------------------------------------------------------------`
-`# round robin balancing between the various backends`
-`#---------------------------------------------------------------------`
-         `backend nodes
-           balance     roundrobin
-           server app1 192.168.34.12:80 check
-           server app2 192.168.34.13:80 check`
+	#---------------------------------------------------------------------
+	# round robin balancing between the various backends
+	#---------------------------------------------------------------------
+		 backend nodes
+		   balance     roundrobin
+		   server app1 192.168.34.12:80 check
+		   server app2 192.168.34.13:80 check`
 	   
 	  
-Configurar los logs en el archivo rsyslog: 
+Configurar los logs en el archivo rsyslog:
         
 	
-	`sudo vi /etc/sysconfig/rsyslog`
-        
-	
-	`SYSLOGD_OPTIONS="-r"
-         local2.*                       /var/log/haproxy.log`
+	sudo vi /etc/sysconfig/rsyslog
+      
+	SYSLOGD_OPTIONS="-r"
+        local2.*                       /var/log/haproxy.log
 
 
 Reiniciar el servicio: 
 
 
-`sudo service haproxy restart` 
+	sudo service haproxy restart 
 
 
 - Servidores Web
@@ -84,198 +79,87 @@ Reiniciar el servicio:
 Instalar httpd:
 
 
-`sudo yum install httpd`
+	sudo yum install httpd
 
 
 Iniciar el servicio:
 
 
-`sudo service httpd start`
+	sudo service httpd start
 
 
 2. Archivo Vagrantfile para realizar el aprovisionamiento
 
-~~
-# -*- mode: ruby -*-
 
-# vi: set ft=ruby :
+		# -*- mode: ruby -*-
 
-VAGRANTFILE_API_VERSION = "2"
+		# vi: set ft=ruby :
 
+		VAGRANTFILE_API_VERSION = "2"
+		Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|  
+		  config.ssh.insert_key = false
 
-Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  
-  
-  config.ssh.insert_key = false
-  
-  
-  #Balanceador de carga
-  
-  
-  config.vm.define :load_balancer do |load_balancer|
-  
-  
-   load_balancer.vm.box = "centos1706v3"
-  
-  
-   load_balancer.vm.network :private_network, ip: "192.168.34.11"
-    
-    
-   load_balancer.vm.provider :virtualbox do |vb|
-  
-  
-      vb.customize ["modifyvm", :id, "--memory", "1024","--cpus", "4", "--name", "load_balancer" ]
-    
-    
-    end
-   
-   
-   config.vm.provision :chef_solo do |chef|
-   
-   
-      chef.install = false
-      
-      
-      chef.cookbooks_path = "cookbooks"
-      
-      
-      chef.add_recipe "haproxy"
-      
-      
-      chef.json = {
-	
-	
-	"web_servers" => [
-	
-	
-	  {"ip":"192.168.34.12"},
-	  
-	  
-	  {"ip":"192.168.34.13"}
-	
-	
-	]
-      
-      
-      }
-   
-   
-   end 
-  
-  
-  end
+		  #Balanceador de carga
+		  config.vm.define :load_balancer do |load_balancer|
+		   load_balancer.vm.box = "centos1706v3"
+		   load_balancer.vm.network :private_network, ip: "192.168.34.11"
+		   load_balancer.vm.provider :virtualbox do |vb|
+		      vb.customize ["modifyvm", :id, "--memory", "1024","--cpus", "4", "--name", "load_balancer" ]
+		    end
+		   config.vm.provision :chef_solo do |chef|
+		      chef.install = false
+		      chef.cookbooks_path = "cookbooks"
+		      chef.add_recipe "haproxy"
+		      chef.json = {
+			"web_servers" => [
+			  {"ip":"192.168.34.12"},
+			  {"ip":"192.168.34.13"}
+			]
+		      }
+		   end 
+		  end
 
-  
-  #Servidor web 1
-  
-  
-  config.vm.define :web_server1 do |web_server1|
-  
-  
-    web_server1.vm.box = "centos1706v3"
-    
-    
-    web_server1.vm.network :private_network, ip: "192.168.34.12"
-    
-    
-    web_server1.vm.provider :virtualbox do |vb|
-      
-      
-      vb.customize ["modifyvm", :id, "--memory", "1024","--cpus", "4", "--name", "web_server_a" ]
-    
-    
-    end
-   
-   
-   config.vm.provision :chef_solo do |chef|
-   
-   
-      
-      
-      chef.install = false
-      
-      
-      chef.cookbooks_path = "cookbooks"
-      
-      
-      chef.add_recipe "httpd"
-      
-      
-      chef.json = {
-	
-	
-	"service_name" => "webserver1",
-	
-	
-	"ip" => "192.168.34.12"
-	
-	
-	}
-   
-   
-   end
-  
-  
-  end
+		  #Servidor web 
+		  config.vm.define :web_server1 do |web_server1|
+		    web_server1.vm.box = "centos1706v3"
+		    web_server1.vm.network :private_network, ip: "192.168.34.12"
+		    web_server1.vm.provider :virtualbox do |vb|
+		      vb.customize ["modifyvm", :id, "--memory", "1024","--cpus", "4", "--name", "web_server_a" ]
+		    end
+		   config.vm.provision :chef_solo do |chef|
+		      chef.install = false
+		      chef.cookbooks_path = "cookbooks"
+		      chef.add_recipe "httpd"
+		      chef.json = {
+			"service_name" => "webserver1",
+			"ip" => "192.168.34.12"
+			}
+		   end
+		  end
 
+		  #Servidor web 2
+		  config.vm.define :web_server2 do |web_server2|
+		    web_server2.vm.box = "centos1706v3"
+		    web_server2.vm.network :private_network, ip: "192.168.34.13"
+		    web_server2.vm.provider :virtualbox do |vb|
+		      vb.customize ["modifyvm", :id, "--memory", "1024","--cpus", "4", "--name", "web_server_b" ] 
+		    end
+		   config.vm.provision :chef_solo do |chef|
+		      chef.install = false
+		      chef.cookbooks_path = "cookbooks"
+		      chef.add_recipe "httpd"
+		      chef.json = {
+			"service_name" => "webserver2",
+			"ip" => "192.168.34.13"
+			}
+		   end
+		  end
+		end
 
-  #Servidor web 2
-  
-  
-  config.vm.define :web_server2 do |web_server2|
-  
-  
-    web_server2.vm.box = "centos1706v3"
-    
-    
-    web_server2.vm.network :private_network, ip: "192.168.34.13"
-    
-    
-    web_server2.vm.provider :virtualbox do |vb|
-      
-      
-      vb.customize ["modifyvm", :id, "--memory", "1024","--cpus", "4", "--name", "web_server_b" ] 
-    
-    
-    end
-   
-   
-   config.vm.provision :chef_solo do |chef|
-      
-      
-      chef.install = false
-      
-      
-      chef.cookbooks_path = "cookbooks"
-      
-      
-      chef.add_recipe "httpd"
-      
-      
-      chef.json = {
-	
-	
-	"service_name" => "webserver2",
-	
-	
-	"ip" => "192.168.34.13"
-	
-	
-	}
-   
-   
-   end
-   
-  
-  end
-
-
-end
-~~
 
 3. Cookbooks necesarios para realizar la instalación de los servicios solicitados
 
-![Estructura de los cookbooks](/Cookbook tree.png)
+![Estructura](/cookbook_tree.png)
 
 
    Los cookbooks que se han creado son uno para el balanceador, haproxy, y otro para los servidores web, httpd. Cada uno tiene recetas de configuración e instalación, que automatizan los comandos presentados en el paso 1, donde el archivo default hace referencia a los archivos de instalación y configuración respectivamente. Por otra parte, cuenta con unos templates, que son archivos que adoptarán los servidores y que pueden contener variables que se pasan por medio de un json en el Vagrantfile. Estos templates son referenciados a la carpeta en la que se ubicarán y otras características, así como las variables, en el archivo de configuración de la receta.
